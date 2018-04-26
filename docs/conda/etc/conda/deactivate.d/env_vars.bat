@@ -1,0 +1,5 @@
+set PYTHONPATH=
+set LD_LIBRARY_PATH=
+
+set PATH=%OLDPATH%
+set OLDPATH=
