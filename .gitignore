@@ -2,6 +2,10 @@
 
 # Created by https://www.gitignore.io/api/visualstudiocode,windows,python
 
+# omniORBpy
+*_idl.py
+CorbaAddressBook*
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
