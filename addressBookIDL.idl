@@ -1,0 +1,21 @@
+module CorbaAddressBook {
+	exception ContactAlreadyExists {};
+	exception ContactNotFound {};
+
+	struct Contact {
+		string name;
+		string pnumber;
+	};
+
+	typedef sequence<Contact> ContactList;
+
+	interface AddressBook {
+		void addContact (in Contact c)
+			raises (ContactAlreadyExists);
+		void delContact (in string name)
+			raises (ContactNotFound);
+		void updateContact (in string currentName, in Contact updatedContact)
+			raises (ContactNotFound);
+		ContactList getContacts ();
+	};
+};
