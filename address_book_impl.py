@@ -14,15 +14,28 @@ class AddressBookImpl (CorbaAddressBook__POA.AddressBook):
 		self.all_refs = []
 		self.all_books = []
 
+		loaded = False
+
 		for i in range(1, 4):
 			if (i == self.index):
 				self.all_refs.append(None)
 				self.all_books.append(None)
 				continue
-			
+
 			ref, address_book = self.getAddressBookWithRef(i)
 			self.all_refs.append(ref)
 			self.all_books.append(address_book)
+			
+			if (not loaded and self.all_books[i-1] != None):
+				try:
+					for c in self.all_books[i-1].getContacts():
+						self.contact_list[c.name] = c
+
+				except (CORBA.TRANSIENT):
+					continue
+
+				loaded = True
+
 		
 	def getAddressBookWithRef(self, i):
 		# Resolve the name "test.my_context/AddressBook.#"
