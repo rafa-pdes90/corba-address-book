@@ -26,5 +26,15 @@ class AddressBookImpl (CorbaAddressBook__POA.AddressBook):
 		else:
 			raise CorbaAddressBook.ContactNotFound()
 
+	def addOrUpdateContact(self, c):
+		try:
+			self.addContact(c)
+		
+		except (CorbaAddressBook.ContactAlreadyExists):
+			try:
+				self.updateContact(c.name, c)
+			except (CorbaAddressBook.ContactNotFound):
+				pass
+
 	def getContacts(self):
 		return list(self.contact_list.values())
