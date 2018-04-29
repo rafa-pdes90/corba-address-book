@@ -1,1 +1,1 @@
-appjar<2
+appjar<1
