@@ -39,7 +39,7 @@ if __name__ == '__main__':
 		# Bind the AddressBook object to the test context
 		i = 1
 		while (i > 0 and i < 4): # Limited to 3 by specification of the assignment
-			name_component = CosNaming.NameComponent("AddressBook", str(i))
+			name_component = CosNaming.NameComponent("agenda" + str(i), "")
 			name = [name_component]
 
 			try:

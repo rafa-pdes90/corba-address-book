@@ -28,7 +28,7 @@ class CorbaClient():
 		# Resolve the name "test.my_context/AddressBook.#"
 		for i in random.sample(range(1, 4), 3):
 			name = [CosNaming.NameComponent("test", "my_context"),
-							CosNaming.NameComponent("AddressBook", str(i))]
+							CosNaming.NameComponent("agenda" + str(i), "")]
 			try:
 				objRef = self.naming.resolve(name)
 				objRef._non_existent() # Test if obj exists
@@ -41,7 +41,7 @@ class CorbaClient():
 
 			else:
 				print ("AddressBook" + str(i) + " found")
-				self.connected_to = "AddressBook" + str(i)
+				self.connected_to = "agenda" + str(i)
 
 				# Narrow the object to an CorbaAddressBook::AddressBook
 				return objRef._narrow(AddressBook)

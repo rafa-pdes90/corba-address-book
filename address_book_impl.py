@@ -40,7 +40,7 @@ class AddressBookImpl (CorbaAddressBook__POA.AddressBook):
 	def getAddressBookWithRef(self, i):
 		# Resolve the name "test.my_context/AddressBook.#"
 		name = [CosNaming.NameComponent("test", "my_context"),
-						CosNaming.NameComponent("AddressBook", str(i))]
+						CosNaming.NameComponent("agenda" + str(i), "")]
 		try:
 			objRef = self.naming.resolve(name)
 			objRef._non_existent() # Test if obj exists
