@@ -20,8 +20,8 @@ class CorbaClient():
 			print ("Failed to narrow the root naming context")
 			sys.exit(1)
 
+		self.app = None
 		self.renewAddressBook()
-
 		self.loadApp()
 		
 	def getAddressBook(self):
@@ -41,6 +41,7 @@ class CorbaClient():
 
 			else:
 				print ("AddressBook" + str(i) + " found")
+				self.connected_to = "AddressBook" + str(i)
 
 				# Narrow the object to an CorbaAddressBook::AddressBook
 				return objRef._narrow(AddressBook)
@@ -51,6 +52,9 @@ class CorbaClient():
 		self.address_book = None
 		while self.address_book == None:
 			self.address_book = self.getAddressBook()
+		
+		if (self.app != None):
+			self.app.setLabel("title", "Connected to " + self.connected_to)
 
 	def loadApp(self):
 		# create a GUI variable called app
@@ -61,7 +65,7 @@ class CorbaClient():
 		# add & configure widgets - widgets get a name, to help referencing them later
 		row = self.app.getRow()
 		self.app.setInPadding([10,10])
-		self.app.addLabel("title", "Welcome to CorbaAddressBook", row=row)
+		self.app.addLabel("title", "Connected to " + self.connected_to, row=row)
 		self.app.setLabelBg("title", "lightgreen")
 
 		row = self.app.getRow()
