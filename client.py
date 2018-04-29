@@ -43,13 +43,8 @@ class CorbaClient():
 				print ("AddressBook" + str(i) + " found")
 
 				# Narrow the object to an CorbaAddressBook::AddressBook
-				address_book = objRef._narrow(AddressBook)
-
-				if address_book is None:
-					print ("Object reference is not an CorbaAddressBook::AddressBook")
-					sys.exit(1)
-
-				return address_book
+				return objRef._narrow(AddressBook)
+		
 		return None
 
 	def renewAddressBook(self):
@@ -145,7 +140,7 @@ class CorbaClient():
 			return
 
 		newContact = Contact(name, pnumber)
-
+		updated = True
 		while (True):
 			try:
 				try:
@@ -161,9 +156,12 @@ class CorbaClient():
 								self.address_book.updateContact(ex.c.name, newContact)
 							
 							except (ContactNotFound):
-								print ("Fake News:")
+								updated = False
+						else:
+							updated = False
 
-				print ('Contact saved: "' + self.printContact(newContact) + '"')
+				if (updated):
+					print ('Contact saved: "' + self.printContact(newContact) + '"')
 				self.app.clearEntry("Name", "")
 				self.app.clearEntry("Phone Number", "")
 				return
@@ -196,6 +194,7 @@ class CorbaClient():
 				self.renewAddressBook()
 	
 	def updateContact(self):
+		currentName = self.app.getListBox("ContactName")[0]
 		name = self.app.getEntry("Name")
 		pnumber = self.app.getEntry("Phone Number")
 
@@ -203,11 +202,11 @@ class CorbaClient():
 			return
 
 		newContact = Contact(name, pnumber)
-
+		updated = True
 		while (True):
 			try:
 				try:
-					self.address_book.updateContact(name, newContact)
+					self.address_book.updateContact(currentName, newContact)
 
 				except (ContactNotFound):
 					print ('Contact "' + name + '" does not exist')
@@ -218,9 +217,13 @@ class CorbaClient():
 							self.address_book.addContact(newContact)
 						
 						except (ContactAlreadyExists):
-							print ("Fake News:")
-
-				print ('Contact saved: "' + self.printContact(newContact) + '"')
+							updated = False
+					else:
+						updated = False
+				
+				if (updated):
+					print ('Contact saved: "' + self.printContact(newContact) + '"')
+				
 				self.app.clearEntry("Name", "")
 				self.app.clearEntry("Phone Number", "")
 				return

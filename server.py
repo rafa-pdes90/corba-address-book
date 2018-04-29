@@ -1,4 +1,4 @@
-import sys
+import sys, traceback
 from address_book_impl import AddressBookImpl
 from omniORB import CORBA, PortableServer
 import CosNaming
@@ -45,7 +45,7 @@ if __name__ == '__main__':
 			try:
 				testContext.bind(name, objRef)
 				print ("AddressBook" + str(i) + " object bound")
-				i = 0
+				break
 
 			except (CosNaming.NamingContext.AlreadyBound):
 				try:
@@ -57,9 +57,12 @@ if __name__ == '__main__':
 				except (CORBA.TRANSIENT):
 					testContext.rebind(name, objRef)
 					print ("AddressBook" + str(i) + " binding already existed -- rebound")
-					i = 0
+					break
 
 		if (i != 4): # Limited to 3 by specification of the assignment
+			address_book.loadBooks(naming, i)
+			i = 0
+
 			# Activate the POA
 			poaManager = rootPOA._get_the_POAManager()
 			poaManager.activate()
