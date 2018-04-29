@@ -3,53 +3,260 @@ from CorbaAddressBook import *
 from omniORB import CORBA
 import CosNaming
 import random
+from appJar import gui
 
 
-if __name__ == '__main__':
-	try:
+class CorbaClient():
+
+	def __init__(self, argv):
 		# Initialise the ORB
-		orb = CORBA.ORB_init(sys.argv, CORBA.ORB_ID)
+		orb = CORBA.ORB_init(argv, CORBA.ORB_ID)
 
 		# Obtain a reference to the root naming context
 		obj = orb.resolve_initial_references("NameService")
-		naming = obj._narrow(CosNaming.NamingContext)
+		self.naming = obj._narrow(CosNaming.NamingContext)
 
-		if naming is None:
+		if self.naming is None:
 			print ("Failed to narrow the root naming context")
 			sys.exit(1)
 
+		self.renewAddressBook()
+
+		self.loadApp()
+		
+	def getAddressBook(self):
 		# Resolve the name "test.my_context/AddressBook.#"
-		for i in random.sample(range(1, 2), 1):
+		for i in random.sample(range(1, 4), 3):
 			name = [CosNaming.NameComponent("test", "my_context"),
 							CosNaming.NameComponent("AddressBook", str(i))]
 			try:
-				objRef = naming.resolve(name)
-				print ("AddressBook" + str(i) + " found")
-				break
+				objRef = self.naming.resolve(name)
+				objRef._non_existent() # Test if obj exists
 
-			except (CosNaming.NamingContext.NotFound) as ex:
+			except (CosNaming.NamingContext.NotFound):
 				print ("AddressBook" + str(i) + " not found")
 
-		# Narrow the object to an CorbaAddressBook::AddressBook
-		address_book = objRef._narrow(AddressBook)
+			except (CORBA.TRANSIENT):
+				print ("AddressBook" + str(i) + " is offline")
 
-		if address_book is None:
-			print ("Object reference is not an CorbaAddressBook::AddressBook")
-			sys.exit(1)
+			else:
+				print ("AddressBook" + str(i) + " found")
 
+				# Narrow the object to an CorbaAddressBook::AddressBook
+				address_book = objRef._narrow(AddressBook)
+
+				if address_book is None:
+					print ("Object reference is not an CorbaAddressBook::AddressBook")
+					sys.exit(1)
+
+				return address_book
+		return None
+
+	def renewAddressBook(self):
+		self.address_book = None
+		while self.address_book == None:
+			self.address_book = self.getAddressBook()
+
+	def loadApp(self):
+		# create a GUI variable called app
+		self.app = gui()
+		self.app.setSticky("ew")
+		self.app.setStretch("column")
+
+		# add & configure widgets - widgets get a name, to help referencing them later
+		row = self.app.getRow()
+		self.app.setInPadding([10,10])
+		self.app.addLabel("title", "Welcome to CorbaAddressBook", row=row)
+		self.app.setLabelBg("title", "lightgreen")
+
+		row = self.app.getRow()
+		self.app.startFrame("buttons", row=row)
+		self.app.setSticky("ew")
+		self.app.setStretch("column")
+		self.app.setPadding([10,10])
+		self.app.setInPadding([10,0])
+		self.app.addButton("Add Contact", self.addContact, row=0, column=0)
+		self.app.addButton("Del Contact", self.delContact, row=0, column=1)
+		self.app.addButton("Update Contact", self.updateContact, row=0, column=2)
+		self.app.stopFrame()
+
+		row = self.app.getRow()
+		self.app.startFrame("labels", row=row)
+		self.app.setSticky("ew")
+		self.app.setStretch("column")
+		self.app.setPadding([10,10])
+		self.app.setInPadding([10,0])
+		self.app.addLabelEntry("Name", row=0, column=0)
+		self.app.addLabelEntry("Phone Number", row=0, column=1)
+		self.app.stopFrame()
+
+		row = self.app.getRow()
+		self.app.setPadding([10,10])
+		self.app.setInPadding([10,10])
+		self.app.addButton("Get Contacts", self.getContacts, row=row)
+
+		row = self.app.getRow()
+		self.app.setSticky("nsew")
+		self.app.setStretch("both")
+		self.app.startFrame("listbox", row=row)
+		self.app.setSticky("nsew")
+		self.app.setStretch("both")
+		self.app.setPadding([10,10])
+		self.app.setInPadding([10,10])
+		self.app.addListBox("ContactName", values=[], row=0, column=0)
+		self.app.setListBoxChangeFunction("ContactName", self.selectContact)
+		self.app.setListBoxGroup("ContactName", group=True)
+		self.app.addListBox("ContactPhoneNumber", values=[], row=0, column=1)
+		self.app.setListBoxChangeFunction("ContactPhoneNumber", self.selectContact)
+		self.app.setListBoxGroup("ContactPhoneNumber", group=True)
+		self.app.stopFrame()
+
+		# start the GUI
+		self.app.setLocation("CENTER")
+		self.app.go()
+
+	def selectContact(self, selectedList):
 		try:
-			c = Contact("Rafael", "985287902")
-			address_book.addContact(c)
-			print (str(address_book.getContacts()))
-			address_book.updateContact("Rafael", Contact("Rafael Parente", "981035078"))
-			print (str(address_book.getContacts()))
-		
-		except (ContactAlreadyExists):
-			print ("Contact already exists")
-			address_book.delContact("Rafael")
+			selected = self.app.getListBox(selectedList)[0]
+			pos = self.app.getAllListItems(selectedList).index(selected)
 
-		except (CORBA.TRANSIENT):
-			print ("Server offline")
+			if (selectedList == "ContactName"):
+				name = selected
+				self.app.selectListItemAtPos("ContactPhoneNumber", pos, callFunction=False)
+				pnumber = self.app.getListBox("ContactPhoneNumber")[0]
+			else:
+				pnumber = selected
+				self.app.selectListItemAtPos("ContactName", pos, callFunction=False)
+				name = self.app.getListBox("ContactName")[0]
+
+			self.app.setEntry("Name", name)
+			self.app.setEntry("Phone Number", pnumber)
+		except (IndexError):
+			pass
+		
+	def printContact(self, c):
+		return "Name: " + c.name + " - Phone Number: " + c.pnumber
+
+	def addContact(self):
+		name = self.app.getEntry("Name")
+		pnumber = self.app.getEntry("Phone Number")
+
+		if (name == "" or pnumber == ""):
+			return
+
+		newContact = Contact(name, pnumber)
+
+		while (True):
+			try:
+				try:
+					self.address_book.addContact(newContact)
+
+				except (ContactAlreadyExists) as ex:
+					print ('Contact already exists: "' + self.printContact(ex.c) + '"')
+
+					if (ex.c.pnumber != pnumber):
+						msg = "Contact already exists as:\r\n" + self.printContact(ex.c) + "\r\n\r\nWould your like to update it?"
+						if (self.app.yesNoBox("Warning", msg)):
+							try:
+								self.address_book.updateContact(ex.c.name, newContact)
+							
+							except (ContactNotFound):
+								print ("Fake News:")
+
+				print ('Contact saved: "' + self.printContact(newContact) + '"')
+				self.app.clearEntry("Name", "")
+				self.app.clearEntry("Phone Number", "")
+				return
+
+			except (CORBA.TRANSIENT):
+				self.renewAddressBook()
+
+	def delContact(self):
+		name = self.app.getEntry("Name")
+
+		if (name == ""):
+			return
+
+		while (True):
+			try:
+				try:
+					self.address_book.delContact(name)
+
+				except (ContactNotFound):
+					print ("Contact already deleted")
+
+				else:
+					print ('Contact "' + name + '" deleted')
+				
+				self.app.clearEntry("Name", "")
+				self.app.clearEntry("Phone Number", "")
+				return
+
+			except (CORBA.TRANSIENT):
+				self.renewAddressBook()
+	
+	def updateContact(self):
+		name = self.app.getEntry("Name")
+		pnumber = self.app.getEntry("Phone Number")
+
+		if (name == "" or pnumber == ""):
+			return
+
+		newContact = Contact(name, pnumber)
+
+		while (True):
+			try:
+				try:
+					self.address_book.updateContact(name, newContact)
+
+				except (ContactNotFound):
+					print ('Contact "' + name + '" does not exist')
+
+					msg = 'Contact "' + name + '" does not exist\r\n\r\nWould your like to add it?'
+					if (self.app.yesNoBox("Warning", msg)):
+						try:
+							self.address_book.addContact(newContact)
+						
+						except (ContactAlreadyExists):
+							print ("Fake News:")
+
+				print ('Contact saved: "' + self.printContact(newContact) + '"')
+				self.app.clearEntry("Name", "")
+				self.app.clearEntry("Phone Number", "")
+				return
+
+			except (CORBA.TRANSIENT):
+				self.renewAddressBook()
+
+	
+	def getContacts(self):
+		contact_list = []
+
+		while (True):
+			try:
+				contact_list = self.address_book.getContacts()
+				break
+
+			except (CORBA.TRANSIENT):
+				self.renewAddressBook()
+		
+
+		names = []
+		pnumbers = []
+		for c in contact_list:
+			names.append(c.name)
+			pnumbers.append(c.pnumber)
+
+		self.app.clearListBox("ContactName", callFunction=False)
+		self.app.addListItems("ContactName", sorted(names, key=str.lower), select=False)
+
+		self.app.clearListBox("ContactPhoneNumber", callFunction=False)
+		self.app.addListItems("ContactPhoneNumber", sorted(pnumbers, key=str.lower), select=False)
+
+
+if __name__ == '__main__':
+	try:		
+		client = CorbaClient(sys.argv)
 	
 	except Exception as inst:
 		print("Unknown Error : " + str(inst))
