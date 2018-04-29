@@ -1,11 +1,13 @@
 module CorbaAddressBook {
-	exception ContactAlreadyExists {};
-	exception ContactNotFound {};
-
 	struct Contact {
 		string name;
 		string pnumber;
 	};
+
+	exception ContactAlreadyExists {
+		Contact c;
+	};
+	exception ContactNotFound {};
 
 	typedef sequence<Contact> ContactList;
 
