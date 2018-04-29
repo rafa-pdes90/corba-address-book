@@ -9,7 +9,7 @@ class AddressBookImpl (CorbaAddressBook__POA.AddressBook):
 		if (c.name not in self.contact_list):
 			self.contact_list[c.name] = c
 		else:
-			raise CorbaAddressBook.ContactAlreadyExists()
+			raise CorbaAddressBook.ContactAlreadyExists(self.contact_list[c.name])
 
 	def delContact(self, name):
 		if (name in self.contact_list):
@@ -23,6 +23,8 @@ class AddressBookImpl (CorbaAddressBook__POA.AddressBook):
 				self.delContact(currentName)
 			
 			self.contact_list[updatedContact.name] = updatedContact
+		else:
+			raise CorbaAddressBook.ContactNotFound()
 
 	def getContacts(self):
 		return list(self.contact_list.values())
