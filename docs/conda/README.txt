@@ -1,4 +1,4 @@
-Import environment.yml
+Create an new env with python=3.6
 
 The 'etc' folder goes inside the env folder 'corba-contact-book'
 
