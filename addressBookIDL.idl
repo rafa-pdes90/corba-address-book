@@ -18,7 +18,6 @@ module CorbaAddressBook {
 			raises (ContactNotFound);
 		void updateContact (in string currentName, in Contact updatedContact)
 			raises (ContactNotFound);
-		void addOrUpdateContact (in Contact c);
 		ContactList getContacts ();
 	};
 };

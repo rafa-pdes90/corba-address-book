@@ -83,9 +83,9 @@ class AddressBookImpl (CorbaAddressBook__POA.AddressBook):
 
 			for address_book in self.getNextBook():
 				try:
-					address_book.addOrUpdateContact(c)
+					address_book.addContact(c)
 				
-				except (CORBA.TRANSIENT):
+				except (CORBA.TRANSIENT, CorbaAddressBook.ContactAlreadyExists):
 					continue
 
 		else:
@@ -121,9 +121,6 @@ class AddressBookImpl (CorbaAddressBook__POA.AddressBook):
 			
 		else:
 			raise CorbaAddressBook.ContactNotFound()
-
-	def addOrUpdateContact(self, c):
-		self.contact_list[c.name] = c
 
 	def getContacts(self):
 		return list(self.contact_list.values())
